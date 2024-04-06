@@ -1,12 +1,77 @@
 package application;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 
 import DB.DB;
 
 public class Program {
     public static void main(String[] args) {
-        Connection conn = DB.getConnection();
-        DB.closeConnection();
+        /* ***READ DATA***
+
+         * Statement st = null;
+         * ResultSet rs = null;
+         * 
+         * try {
+         * 
+         * conn = DB.getConnection();
+         * 
+         * st = conn.createStatement();
+         * rs = st.executeQuery("select * from department");
+         * 
+         * while (rs.next()) {
+         * System.out.println(rs.getInt("Id") + ", " + rs.getString("Name"));
+         * }
+         * }
+         * catch (SQLException e) {
+         * e.printStackTrace();
+         * }
+         * finally{
+         * DB.closeResultSet(rs);
+         * DB.closeStatment(st);
+         * DB.closeConnection();
+         * }
+         * }
+         */
+
+         Connection conn = null;
+         PreparedStatement st = null;
+         SimpleDateFormat formatDate = new SimpleDateFormat("dd/MM/yyyy");
+
+         
+         try{
+            conn = DB.getConnection();
+            
+            st = conn.prepareStatement(
+                "INSERT INTO seller "
+                + "(Name, Email, BirthDate, BaseSalary, DepartmentId) "
+                + "VALUES "
+                + "(?, ?, ?, ?, ?)"
+            );
+            st.setString(1, "Jack Green");
+            st.setString(2, "jack@gmail.com");
+            st.setDate(3, new java.sql.Date(formatDate.parse("25/10/2000").getTime()));
+            st.setDouble(4, 3500.00);
+            st.setInt(5, 1);
+
+            st.executeUpdate();
+
+        }
+        catch(SQLException e){
+            e.printStackTrace();
+        }
+        catch(ParseException e){
+            e.printStackTrace();
+        }
+        finally{
+            DB.closeStatment(st);
+            DB.closeConnection();
+        }
+        
     }
 }
