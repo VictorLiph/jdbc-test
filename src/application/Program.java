@@ -1,11 +1,11 @@
 package application;
 
 import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Statement;
 
 import DB.DB;
-import DB.DBIntegrityException;
+import DB.DBException;
 
 public class Program {
     public static void main(String[] args) {
@@ -102,27 +102,66 @@ public class Program {
          * }
          */
 
-        // *** DELETE DATA (WITH CUSTOM EXCEPTION)
+        /*
+         * *** DELETE DATA (WITH CUSTOM EXCEPTION)
+         * 
+         * Connection conn = null;
+         * PreparedStatement st = null;
+         * 
+         * try {
+         * conn = DB.getConnection();
+         * 
+         * 
+         * st = conn.prepareStatement(
+         * "DELETE FROM department "
+         * + "WHERE Id = ?"
+         * );
+         * st.setInt(1, 2);
+         * 
+         * 
+         * st.executeUpdate();
+         * } catch (SQLException e) {
+         * throw new DBIntegrityException(e.getMessage());
+         * }
+         * finally {
+         * DB.closeStatment(st);
+         * DB.closeConnection();
+         * }
+         */
+
         Connection conn = null;
-        PreparedStatement st = null;
+        Statement st = null;
 
         try {
             conn = DB.getConnection();
 
-            
-            st = conn.prepareStatement(
-                    "DELETE FROM department "
-                    + "WHERE Id = ?"
-                    );
-            st.setInt(1, 2);
-                    
+            conn.setAutoCommit(false);
 
-            st.executeUpdate();
-        } catch (SQLException e) {
-            throw new DBIntegrityException(e.getMessage());
-        } finally {
-            DB.closeStatment(st);
-            DB.closeConnection();
+            st = conn.createStatement();
+
+            int rows1 = st.executeUpdate("UPDATE seller SET BaseSalary = 7800 WHERE DepartmentId = 1");
+
+            int x = 1;
+            if (x < 2) {
+                throw new SQLException("FAKE ERROR");
+            }
+
+            int rows2 = st.executeUpdate("UPDATE seller SET BaseSalary = 6500 WHERE DepartmentId = 2");
+
+            conn.commit();
+
+            System.out.println("DONE");
+            System.out.println("ROWS1: " + rows1);
+            System.out.println("ROWS2: " + rows2);
+        } 
+        catch (SQLException e) {
+            try {
+                throw new DBException("FATAL ERROR!\nTransaction rolled back!\nCaused by " + e.getMessage());
+            } 
+            finally {
+                DB.closeStatment(st);
+                DB.closeConnection();
+            }
         }
     }
 }
